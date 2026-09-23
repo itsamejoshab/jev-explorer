@@ -1,5 +1,7 @@
 # Jev Explorer
 
+![Jev Explorer](docs/screenshots/jev-explorer.png)
+
 A minimal [OpenTUI](https://opentui.com) terminal UI for [Jev / TypeSafe System One](https://typesafe.ai). Run one question at a time, inspect the raw JSON and API round-trip latency, and save/load cases from `data/`.
 
 ## macOS setup
