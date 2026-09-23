@@ -1,0 +1,21 @@
+{
+  "name": "jev-explorer",
+  "version": "0.1.0",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --hot run src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.2",
+    "typescript": "~5.9.2"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.5.12",
+    "@typesafe-ai/sdk": "^0.6.0"
+  }
+}

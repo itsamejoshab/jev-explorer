@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "exportedAt": "2026-09-23T16:00:00.000Z",
+  "name": "example1",
+  "form": {
+    "primitive": "noul",
+    "question": "Is chocolate this person's favorite ice cream flavor?",
+    "context": "They always order a chocolate cone, and they say vanilla is fine but boring.",
+    "possibleAnswers": "true: Chocolate is the flavor they would pick first.\nfalse: They prefer a different flavor."
+  }
+}

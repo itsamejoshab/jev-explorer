@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "exportedAt": "2026-09-23T16:00:00.000Z",
+  "name": "example2",
+  "form": {
+    "primitive": "choice",
+    "question": "What is this person's favorite ice cream flavor?",
+    "context": "At the shop they skip the fruit flavors, look at mint chip, and then order chocolate.",
+    "possibleAnswers": "vanilla: Plain vanilla.\nchocolate: Chocolate ice cream.\nmint-chip: Mint chip.\nstrawberry: Strawberry."
+  }
+}
