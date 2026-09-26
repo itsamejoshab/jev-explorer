@@ -55,7 +55,7 @@ const FOCUS_ORDER: FocusTarget[] = [
 
 const APP_VERSION = "v0.1";
 const FOOTER_IDLE =
-  "Tab focus  ·  Ctrl+Enter run  ·  Ctrl+E export  ·  Ctrl+I import  ·  Ctrl+T theme  ·  Ctrl+C clear  ·  Esc quit";
+  "Tab focus  ·  Alt+Enter run  ·  Alt+E export  ·  Alt+I import  ·  Alt+T theme  ·  Alt+C clear  ·  Esc quit";
 
 export interface AppHandles {
   run: () => Promise<void>;
@@ -341,7 +341,7 @@ export function mountApp(renderer: CliRenderer): AppHandles {
 
   const statusText = new TextRenderable(renderer, {
     id: "status-text",
-    content: "Idle  ·  press Ctrl+Enter to run",
+    content: "Idle  ·  press Alt+Enter to run",
     fg: theme.muted,
     flexGrow: 0,
     flexShrink: 0,
@@ -588,7 +588,7 @@ export function mountApp(renderer: CliRenderer): AppHandles {
     answersInput.placeholder = answersHint(selectedPrimitive);
   }
 
-  let statusMessage = "Idle  ·  press Ctrl+Enter to run";
+  let statusMessage = "Idle  ·  press Alt+Enter to run";
   let latencyMessage = "Latency: —";
 
   function setStatus(
@@ -745,7 +745,7 @@ export function mountApp(renderer: CliRenderer): AppHandles {
       context: "",
       possibleAnswers: "",
     });
-    setStatus("Idle  ·  press Ctrl+Enter to run", "muted");
+    setStatus("Idle  ·  press Alt+Enter to run", "muted");
     setLatency(null);
     setDecision("Run a request to see the parsed decision here.");
     setJson("{\n  // response appears here after a run\n}");
@@ -808,7 +808,7 @@ export function mountApp(renderer: CliRenderer): AppHandles {
     }
 
     if (importFiles.length === 0) {
-      setStatus("No cases in data/ yet. Export one with Ctrl+E.", "warn");
+      setStatus("No cases in data/ yet. Export one with Alt+E.", "warn");
       return;
     }
 
@@ -966,7 +966,9 @@ export function mountApp(renderer: CliRenderer): AppHandles {
   }
 
   const onKey = (key: KeyEvent) => {
-    if (key.ctrl && (key.name === "c" || key.name === "C")) {
+    // Alt-based commands: plain Alt+<key> is unbound in Hyprland, Ghostty,
+    // foot, kitty, and alacritty, so it always reaches the app.
+    if (key.meta && key.name === "c") {
       key.stopPropagation?.();
       clearAll();
       return;
@@ -983,7 +985,7 @@ export function mountApp(renderer: CliRenderer): AppHandles {
         void confirmExport();
         return;
       }
-      if (key.ctrl || key.name === "tab") {
+      if (key.ctrl || key.meta || key.name === "tab") {
         key.stopPropagation?.();
       }
       return;
@@ -1000,7 +1002,7 @@ export function mountApp(renderer: CliRenderer): AppHandles {
         void confirmImport();
         return;
       }
-      if (key.ctrl || key.name === "tab") {
+      if (key.ctrl || key.meta || key.name === "tab") {
         key.stopPropagation?.();
       }
       return;
@@ -1018,30 +1020,29 @@ export function mountApp(renderer: CliRenderer): AppHandles {
       return;
     }
 
-    if (key.ctrl && key.name === "e") {
+    if (key.meta && key.name === "e") {
       key.stopPropagation?.();
       openExport();
       return;
     }
 
-    if (key.ctrl && key.name === "i") {
+    if (key.meta && key.name === "i") {
       key.stopPropagation?.();
       void openImport();
       return;
     }
 
-    if (key.ctrl && key.name === "t") {
+    if (key.meta && key.name === "t") {
       key.stopPropagation?.();
       toggleTheme();
       return;
     }
 
     if (
-      key.ctrl &&
+      key.meta &&
       (key.name === "return" ||
         key.name === "enter" ||
-        key.name === "j" ||
-        key.name === "m")
+        key.name === "kpenter")
     ) {
       key.stopPropagation?.();
       void run();

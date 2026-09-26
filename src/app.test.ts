@@ -211,4 +211,48 @@ describe("OpenTUI app smoke", () => {
 
     app.destroy();
   });
+
+  test("commands trigger via Alt+<key> hotkeys", async () => {
+    const { renderer, mockInput, renderOnce } = await createTestRenderer({
+      width: 120,
+      height: 40,
+      backgroundColor: "#0f172a",
+    });
+    const app = mountApp(renderer);
+    await renderOnce();
+
+    expect(app.getThemeId()).toBe("slate");
+    mockInput.pressKey("t", { meta: true });
+    await renderOnce();
+    expect(app.getThemeId()).toBe("moss");
+
+    mockInput.pressKey("e", { meta: true });
+    await renderOnce();
+    expect(app.isExportOpen()).toBe(true);
+    mockInput.pressEscape();
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await renderOnce();
+    expect(app.isExportOpen()).toBe(false);
+
+    mockInput.pressKey("i", { meta: true });
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await renderOnce();
+    expect(app.isImportOpen()).toBe(true);
+    mockInput.pressEscape();
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await renderOnce();
+    expect(app.isImportOpen()).toBe(false);
+
+    app.setQuestion("Is this urgent?");
+    mockInput.pressKey("c", { meta: true });
+    await renderOnce();
+    expect(app.getForm().question).toBe("");
+
+    app.setQuestion("Is this urgent?");
+    mockInput.pressEnter({ meta: true });
+    await renderOnce();
+    expect(app.getStatus()).toMatch(/Error: Context is required/);
+
+    app.destroy();
+  });
 });

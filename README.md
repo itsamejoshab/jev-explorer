@@ -66,12 +66,26 @@ Or:
 bun run src/index.ts
 ```
 
+## Keys
+
+Commands use `Alt+<key>` so they never collide with terminal or window-manager shortcuts (e.g. Ghostty's `Ctrl+Enter` fullscreen).
+
+| Key | Action |
+| --- | --- |
+| `Alt+Enter` | Run the request |
+| `Alt+E` | Export the current form as a case |
+| `Alt+I` | Import a saved case |
+| `Alt+T` | Cycle theme |
+| `Alt+C` | Clear form and outputs |
+| `Tab` / `Shift+Tab` | Cycle focus |
+| `Esc` | Close dialog / quit |
+
 ## Saving and loading cases
 
 The entire left pane (primitive, question, context, possible answers) can be saved as a JSON case under `data/` and loaded later.
 
-- **Export (`Ctrl+E`)** opens a rename dialog with a suggested filename. Edit it, then press **Enter** to save under `data/` (`.json` is added if missing). **Esc** cancels.
-- **Import (`Ctrl+I`)** opens a picker of `data/*.json` files. Use `↑`/`↓`, `Enter` to load, `Esc` to cancel.
+- **Export (`Alt+E`)** opens a rename dialog with a suggested filename. Edit it, then press **Enter** to save under `data/` (`.json` is added if missing). **Esc** cancels.
+- **Import (`Alt+I`)** opens a picker of `data/*.json` files. Use `↑`/`↓`, `Enter` to load, `Esc` to cancel.
 
 Example case shape:
 
