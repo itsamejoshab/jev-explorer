@@ -190,10 +190,43 @@ describe("runSystemOne", () => {
     if (result.ok) {
       expect(result.latencyMs).toBeGreaterThanOrEqual(20);
       expect(result.json).toContain('"noul": 0.82');
+      expect(result.answerOrder).toBeNull();
       expect(result.result.answers[ANSWER_KEY]).toEqual({
         type: "noul",
         noul: 0.82,
       });
+    }
+  });
+
+  test("returns the choice option order the user entered", async () => {
+    const caller: SystemOneCaller = {
+      systemOne: mock(async () => ({
+        model: "jev-latest",
+        answers: {
+          [ANSWER_KEY]: {
+            type: "choice",
+            choice: "true",
+            confidence: 0.6,
+            probabilities: { true: 0.6, false: 0.4 },
+          },
+        },
+        usage: { input_tokens: 10, output_tokens: 5 },
+      }) as never),
+    };
+
+    const result = await runSystemOne(
+      {
+        primitive: "choice",
+        question: "Is this spam?",
+        context: "Buy now, limited offer",
+        possibleAnswers: "true: spam\nfalse: not spam",
+      },
+      caller,
+    );
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.answerOrder).toEqual(["true", "false"]);
     }
   });
 
@@ -311,7 +344,7 @@ describe("summarizeAnswer", () => {
       },
       usage: { input_tokens: 10, output_tokens: 4 },
     } as never);
-    expect(text).toContain("Model: jev-latest");
+    expect(text).not.toContain("Model:");
     expect(text).toContain("P(yes)=82.0%");
     expect(text).toContain("Tokens: in=10  out=4");
   });
@@ -324,15 +357,33 @@ describe("summarizeAnswer", () => {
           type: "choice",
           choice: "billing",
           confidence: 0.91,
-          probabilities: { billing: 0.91, technical: 0.09 },
+          probabilities: { technical: 0.09, billing: 0.91 },
         },
       },
       usage: { input_tokens: 20, output_tokens: 8 },
     } as never);
     expect(text).toContain("Decision: billing");
     expect(text).toContain("confidence=91.0%");
-    expect(text).toContain("billing=91.0%");
-    expect(text).toContain("technical=9.0%");
+    expect(text).toContain("Probabilities: billing=91.0%  technical=9.0%");
+  });
+
+  test("orders choice probabilities by the form's answer order", () => {
+    const result = {
+      model: "jev-1",
+      answers: {
+        [ANSWER_KEY]: {
+          type: "choice",
+          choice: "true",
+          confidence: 0.6,
+          probabilities: { false: 0.4, true: 0.6 },
+        },
+      },
+      usage: { input_tokens: 5, output_tokens: 2 },
+    } as never;
+
+    expect(summarizeAnswer(result, ["true", "false"])).toContain(
+      "Probabilities: true=60.0%  false=40.0%",
+    );
   });
 
   test("formats score answers with legend label", () => {
@@ -344,12 +395,13 @@ describe("summarizeAnswer", () => {
           score: 2,
           confidence: 0.7,
           legend: { "0": "low", "1": "mid", "2": "high" },
-          probabilities: { "0": 0.1, "1": 0.2, "2": 0.7 },
+          probabilities: { "2": 0.7, "0": 0.1, "1": 0.2 },
         },
       },
       usage: { input_tokens: 5, output_tokens: 3 },
     } as never);
     expect(text).toContain("score=2 (high)");
     expect(text).toContain("confidence=70.0%");
+    expect(text).toContain("Probabilities: 0=10.0%  1=20.0%  2=70.0%");
   });
 });

@@ -939,7 +939,7 @@ export function mountApp(renderer: CliRenderer): AppHandles {
       if (result.ok) {
         setStatus("OK", "success");
         setLatency(result.latencyMs);
-        setDecision(summarizeAnswer(result.result));
+        setDecision(summarizeAnswer(result.result, result.answerOrder));
         setJson(result.json);
       } else {
         setStatus(`Error: ${result.error}`, "error");

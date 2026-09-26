@@ -30,6 +30,8 @@ export type RunSuccess = {
   result: SystemOneResult<{ [ANSWER_KEY]: Question }>;
   latencyMs: number;
   json: string;
+  /** Choice option keys in the order the user entered them. */
+  answerOrder: string[] | null;
 };
 
 export type RunFailure = {
@@ -221,11 +223,15 @@ export async function runSystemOne(
   try {
     const result = await client.systemOne(request);
     const latencyMs = Math.round(performance.now() - started);
+    const question = request.questions[ANSWER_KEY];
+    const answerOrder =
+      question.type === "choice" ? Object.keys(question.criteria) : null;
     return {
       ok: true,
       result,
       latencyMs,
       json: JSON.stringify(result, null, 2),
+      answerOrder,
     };
   } catch (error) {
     const latencyMs = Math.round(performance.now() - started);
@@ -248,19 +254,49 @@ function formatPct(value: number): string {
   return `${(value * 100).toFixed(1)}%`;
 }
 
+function compareKeys(a: string, b: string): number {
+  const na = Number(a);
+  const nb = Number(b);
+  if (Number.isFinite(na) && Number.isFinite(nb) && na !== nb) return na - nb;
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/**
+ * Deterministic key order: the caller's order first (e.g. the form's choice
+ * options), then any leftovers sorted numerically or alphabetically.
+ */
+function orderedKeys(
+  probabilities: Readonly<Record<string, number>>,
+  order?: readonly string[] | null,
+): string[] {
+  if (order) {
+    const inOrder = new Set(order);
+    const ranked = order.filter((key) => key in probabilities);
+    const extras = Object.keys(probabilities)
+      .filter((key) => !inOrder.has(key))
+      .sort(compareKeys);
+    return [...ranked, ...extras];
+  }
+  return Object.keys(probabilities).sort(compareKeys);
+}
+
 function formatProbabilities(
   probabilities: Record<string, number> | Readonly<Record<string, number>>,
+  order?: readonly string[] | null,
 ): string {
-  return Object.entries(probabilities)
-    .map(([key, value]) => `${key}=${formatPct(Number(value))}`)
+  return orderedKeys(probabilities, order)
+    .map((key) => `${key}=${formatPct(Number(probabilities[key]))}`)
     .join("  ");
 }
 
 /**
  * Human-readable decision summary for the right pane (under latency).
+ * Probabilities follow the form's option order, so the same case always
+ * reads the same way regardless of response key order.
  */
 export function summarizeAnswer(
   result: SystemOneResult<{ [ANSWER_KEY]: Question }>,
+  answerOrder?: readonly string[] | null,
 ): string {
   const answer = result.answers[ANSWER_KEY] as
     | {
@@ -281,7 +317,7 @@ export function summarizeAnswer(
         probabilities: Record<string, number>;
       };
 
-  const lines: string[] = [`Model: ${result.model}`];
+  const lines: string[] = [];
 
   switch (answer.type) {
     case "noul":
@@ -291,7 +327,9 @@ export function summarizeAnswer(
       lines.push(
         `Decision: ${answer.choice}  ·  confidence=${formatPct(answer.confidence)}`,
       );
-      lines.push(`Probabilities: ${formatProbabilities(answer.probabilities)}`);
+      lines.push(
+        `Probabilities: ${formatProbabilities(answer.probabilities, answerOrder)}`,
+      );
       break;
     case "score": {
       const legend = answer.legend as Record<string, unknown>;
