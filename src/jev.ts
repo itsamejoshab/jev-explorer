@@ -170,14 +170,29 @@ export function formatError(error: unknown): string {
   return String(error);
 }
 
-export function createClient(apiKey = process.env.TYPESAFE_API_KEY): TypeSafeClient {
+const OPENROUTER_BASE_URL = "https://openrouter.ai/api";
+const OPENROUTER_JEV_MODEL = "~typesafe/jev-latest";
+
+export function createClient(
+  apiKey = process.env.TYPESAFE_API_KEY,
+): TypeSafeClient {
   const key = apiKey?.trim();
-  if (!key) {
-    throw new Error(
-      "TYPESAFE_API_KEY is missing. Set it in your environment or a .env file.",
-    );
+  if (key && key !== "your_api_key_here") {
+    return new TypeSafeClient({ apiKey: key });
   }
-  return new TypeSafeClient({ apiKey: key });
+
+  const openrouterKey = process.env.OPENROUTER_API_KEY?.trim();
+  if (openrouterKey) {
+    return new TypeSafeClient({
+      apiKey: openrouterKey,
+      baseURL: OPENROUTER_BASE_URL,
+      defaultModel: OPENROUTER_JEV_MODEL,
+    });
+  }
+
+  throw new Error(
+    "TYPESAFE_API_KEY is missing. Set it in your environment or a .env file, or set OPENROUTER_API_KEY to route Jev through OpenRouter.",
+  );
 }
 
 /**

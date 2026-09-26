@@ -44,6 +44,16 @@ TYPESAFE_API_KEY=your_api_key_here
 
 Bun loads `.env` automatically. You can also export the variable in your shell instead.
 
+### OpenRouter fallback
+
+If `TYPESAFE_API_KEY` is blank (or left as the placeholder), set an OpenRouter key instead:
+
+```bash
+OPENROUTER_API_KEY=your_openrouter_key_here
+```
+
+Requests then go through `https://openrouter.ai/api` with the model `~typesafe/jev-latest`.
+
 ## Run
 
 ```bash

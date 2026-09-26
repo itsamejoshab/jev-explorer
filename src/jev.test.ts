@@ -2,6 +2,7 @@ import { describe, expect, mock, test } from "bun:test";
 import {
   ANSWER_KEY,
   buildQuestion,
+  createClient,
   parseChoiceCriteria,
   parseNoulCriteria,
   parseScoreCriteria,
@@ -223,7 +224,9 @@ describe("runSystemOne", () => {
 
   test("reports missing API key when no caller is provided", async () => {
     const previous = process.env.TYPESAFE_API_KEY;
+    const previousOpenrouter = process.env.OPENROUTER_API_KEY;
     delete process.env.TYPESAFE_API_KEY;
+    delete process.env.OPENROUTER_API_KEY;
 
     const result = await runSystemOne({
       primitive: "noul",
@@ -239,6 +242,63 @@ describe("runSystemOne", () => {
     }
 
     if (previous !== undefined) process.env.TYPESAFE_API_KEY = previous;
+    if (previousOpenrouter !== undefined) {
+      process.env.OPENROUTER_API_KEY = previousOpenrouter;
+    }
+  });
+});
+
+describe("createClient", () => {
+  const PLACEHOLDER = "your_api_key_here";
+
+  test("uses the typesafe endpoint when TYPESAFE_API_KEY is set", () => {
+    const previous = process.env.TYPESAFE_API_KEY;
+    const previousOpenrouter = process.env.OPENROUTER_API_KEY;
+    process.env.TYPESAFE_API_KEY = "ts_key";
+    process.env.OPENROUTER_API_KEY = "or_key";
+
+    const client = createClient();
+    expect(client.baseURL).toBe("https://api.typesafe.ai");
+    expect(client.defaultModel).toBe("jev-latest");
+
+    if (previous !== undefined) process.env.TYPESAFE_API_KEY = previous;
+    else delete process.env.TYPESAFE_API_KEY;
+    if (previousOpenrouter !== undefined) {
+      process.env.OPENROUTER_API_KEY = previousOpenrouter;
+    } else delete process.env.OPENROUTER_API_KEY;
+  });
+
+  test("falls back to OpenRouter when TYPESAFE_API_KEY is blank or placeholder", () => {
+    const previous = process.env.TYPESAFE_API_KEY;
+    const previousOpenrouter = process.env.OPENROUTER_API_KEY;
+    process.env.OPENROUTER_API_KEY = "or_key";
+
+    for (const blank of ["", "   ", PLACEHOLDER]) {
+      process.env.TYPESAFE_API_KEY = blank;
+      const client = createClient();
+      expect(client.baseURL).toBe("https://openrouter.ai/api");
+      expect(client.defaultModel).toBe("~typesafe/jev-latest");
+    }
+
+    if (previous !== undefined) process.env.TYPESAFE_API_KEY = previous;
+    else delete process.env.TYPESAFE_API_KEY;
+    if (previousOpenrouter !== undefined) {
+      process.env.OPENROUTER_API_KEY = previousOpenrouter;
+    } else delete process.env.OPENROUTER_API_KEY;
+  });
+
+  test("throws when both keys are missing", () => {
+    const previous = process.env.TYPESAFE_API_KEY;
+    const previousOpenrouter = process.env.OPENROUTER_API_KEY;
+    delete process.env.TYPESAFE_API_KEY;
+    delete process.env.OPENROUTER_API_KEY;
+
+    expect(() => createClient()).toThrow(/TYPESAFE_API_KEY/);
+
+    if (previous !== undefined) process.env.TYPESAFE_API_KEY = previous;
+    if (previousOpenrouter !== undefined) {
+      process.env.OPENROUTER_API_KEY = previousOpenrouter;
+    }
   });
 });
 
